@@ -1,7 +1,7 @@
 use std::env;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
 
 fn enumerate_cities(file_path: &str, cities: Vec<String>) -> io::Result<(HashMap<String, usize>, Vec<String>)> {
     let file: File = File::open(file_path)?;
@@ -59,6 +59,110 @@ fn build_city_adjacency_list(file_path: &str, city_to_id: &HashMap<String, usize
     Ok(city_graph)
 }
 
+fn save_solution( shortest_distance: i32, path: &Vec<usize>, city_graph: &Vec<Vec<i32>>, id_to_city: &Vec<String>, output_file: &str) -> io::Result<()> {
+    let mut file = File::create(output_file)?;
+
+    writeln!(file, "{}", shortest_distance)?;
+
+    for i in 0..path.len() - 1 {
+        let from = path[i];
+        let to = path[i + 1];
+        let dist = city_graph[from][to];
+        let parts_from: Vec<&str> = id_to_city[from].split(',').map(|s| s.trim()).collect();
+        let parts_to: Vec<&str> = id_to_city[to].split(',').map(|s| s.trim()).collect();
+        writeln!(file, "{},{},{},{},{}", parts_from[0], parts_from[1], parts_to[0], parts_to[1], dist)?;
+    }
+
+    Ok(())
+}
+
+fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Vec<usize>) {
+    let n = city_graph.len();
+    let possible_states = 1 << n;
+
+    let mut shortest_paths: Vec<Vec<i32>> = vec![vec![i32::MAX; n]; possible_states];
+    let mut previous_cities: Vec<Vec<i32>> = vec![vec![-1; n]; possible_states];
+    let mut is_state_used = vec![false; possible_states];
+
+
+    let mut states = vec![];
+    let mut next_states: Vec<i32>;
+
+    let mut next_state: i32; 
+    let mut next_distance: i32;
+    let mut city: i32;
+    let mut previous_city: i32;
+    let mut can_visit_first_city: bool;
+    let mut is_city_visited: bool;
+    let mut is_first_city: bool;
+
+    for i in 1..n {
+        let state = 1  << i;
+
+        shortest_paths[state][i] = city_graph[first_city][i];
+        previous_cities[state][i] = first_city as i32;
+        is_state_used[state] = true;
+
+        states.push(state as i32);
+    }
+
+    for iteration in 1..n {
+        next_states = vec![];
+        can_visit_first_city = iteration == n - 1;
+
+        for &state in &states {
+            for city_index in 0..n {
+                city = 1 << city_index;
+
+                is_city_visited = city & state != 0;
+                is_first_city = city_index == first_city;
+                if is_city_visited || (is_first_city && !can_visit_first_city) { continue; }
+
+                next_state = state | city;
+
+                if !is_state_used[next_state as usize] {
+                    next_states.push(next_state);
+                    is_state_used[next_state as usize] = true;
+                }
+
+                for previous_city_index in 0..n {
+                    previous_city = 1 << previous_city_index;
+
+                    is_city_visited = previous_city & state != 0;
+                    if !is_city_visited { continue; }
+
+                    next_distance = shortest_paths[state as usize][previous_city_index] + city_graph[previous_city_index][city_index];
+
+                    if next_distance < shortest_paths[next_state as usize][city_index] {
+                        shortest_paths[next_state as usize][city_index] = next_distance;
+                        previous_cities[next_state as usize][city_index] = previous_city_index as i32;
+                    }
+                }
+            }
+        }
+
+        states = next_states;
+    }
+
+    let shortest_distance = shortest_paths[possible_states - 1][0];
+
+    let mut path = Vec::new();
+    let mut state = possible_states - 1;
+    let mut city = first_city;
+
+    while previous_cities[state][city] > -1 {
+        path.push(city);
+        let prev_city = previous_cities[state][city] as usize;
+        state ^= 1 << city;
+        city = prev_city;
+    }
+    
+    path.push(first_city);
+    path.reverse();
+
+    (shortest_distance, path)
+}
+
 fn main() {
     let cities: Vec<String> = env::args().skip(1).collect();
     let n: usize = cities.len();
@@ -69,77 +173,11 @@ fn main() {
 
     let csv_file: &'static str = "../input.txt";
     let (city_to_id, id_to_city) = enumerate_cities(&csv_file, cities).unwrap();
-    let city_graph:Vec<Vec<i32>> = build_city_adjacency_list(&csv_file, &city_to_id).unwrap();
+    let city_graph: Vec<Vec<i32>> = build_city_adjacency_list(&csv_file, &city_to_id).unwrap();
 
-    println!("Adjacency list (city distances):");
-    for (i, row) in city_graph.iter().enumerate() {
-        print!("{} ({}): ", i, id_to_city[i]);
-        for &dist in row {
-            if dist == i32::MAX {
-                print!("INF ");
-            } else {
-                print!("{} ", dist);
-            }
-        }
-        println!();
-    }
+    let first_city = 0;
+    let (shortest_distance, path) = find_shortest_path(&city_graph, first_city);
 
-    let possible_states: usize = 1 << n;
-    let mut shortest_paths: Vec<i32> = vec![i32::MAX; possible_states];
-    let mut last_city: Vec<i32> = vec![-1; possible_states];
-    let mut previous_city: Vec<i32> = vec![-1; possible_states];
-
-    shortest_paths[0] = 0;
-    last_city[0] = 0;
-
-    let mut state_traversal: Vec<i32> = vec![0];
-    let mut next_state_traversal: Vec<i32>;
-
-    let first_city: usize = 0;
-    let mut city: i32;
-    let mut next_state: i32;
-    let mut next_distance: i32;
-    let mut is_city_visited: bool;
-    let mut is_first_city: bool;
-    let mut can_visit_first_city: bool;
-    let mut is_state_unvisited: bool;
-    let mut is_new_distance_shorter:bool;
-    
-    for iteration in 0..n {
-        next_state_traversal = Vec::new();
-
-        can_visit_first_city = iteration == n - 1;
-
-        for &state in &state_traversal {
-            for city_index in 0..n {
-                city = 1 << city_index;
-
-                is_city_visited = city & state != 0;
-                is_first_city = city_index == first_city;
-
-                if !is_city_visited && (!is_first_city || can_visit_first_city) {
-                    next_state = state | city;
-                    next_distance = shortest_paths[state as usize] + city_graph[last_city[state as usize] as usize][city_index];
-
-                    is_state_unvisited = last_city[next_state as usize] == -1;
-                    is_new_distance_shorter = next_distance < shortest_paths[next_state as usize];
-
-                    if is_state_unvisited || is_new_distance_shorter {
-                        shortest_paths[next_state as usize] = next_distance;
-                        last_city[next_state as usize] = city_index as i32;
-                        previous_city[next_state as usize] = last_city[state as usize];
-                    }
-
-                    if is_state_unvisited {
-                        next_state_traversal.push(next_state);
-                    }
-                }
-            }
-        }
-    
-        state_traversal = next_state_traversal;
-    }
-
-    let final_state: usize = possible_states - 1;
-    println!("Shortest TSP distance: {}", shortest_paths[final_state]);
+    let output_file = "../output.txt";
+    save_solution(shortest_distance, &path, &city_graph, &id_to_city, output_file).unwrap();
 }
