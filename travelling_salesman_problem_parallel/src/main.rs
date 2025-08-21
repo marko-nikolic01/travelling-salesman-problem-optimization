@@ -2,6 +2,8 @@ use std::env;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 fn enumerate_cities(file_path: &str, cities: Vec<String>) -> io::Result<(HashMap<String, usize>, Vec<String>)> {
@@ -78,86 +80,90 @@ fn save_solution( shortest_distance: i32, path: &Vec<usize>, city_graph: &Vec<Ve
 }
 
 fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Vec<usize>) {
-    let n = city_graph.len();
-    let possible_states = 1 << n;
+    let n: usize = city_graph.len();
+    let possible_states: usize = 1 << n;
 
-    let mut shortest_paths: Vec<Vec<i32>> = vec![vec![i32::MAX; n]; possible_states];
-    let mut previous_cities: Vec<Vec<i32>> = vec![vec![-1; n]; possible_states];
-    let mut is_state_used = vec![false; possible_states];
+    let shortest_paths: Arc<Vec<Vec<Mutex<i32>>>> = Arc::new(
+        (0..possible_states)
+            .map(|_| (0..n).map(|_| Mutex::new(i32::MAX)).collect())
+            .collect()
+    );
+    let previous_cities: Arc<Vec<Vec<Mutex<i32>>>> = Arc::new(
+        (0..possible_states)
+            .map(|_| (0..n).map(|_| Mutex::new(-1)).collect())
+            .collect()
+    );
+    let is_state_used: Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; possible_states]));
 
+    let mut states: Vec<i32> = (1..n).map(|i| {
+        let state = 1 << i;
+        *shortest_paths[state][i].lock().unwrap() = city_graph[first_city][i];
+        *previous_cities[state][i].lock().unwrap() = first_city as i32;
+        is_state_used.lock().unwrap()[state] = true;
+        state as i32
+    }).collect();
 
-    let mut states = vec![];
-    let mut next_states: Vec<i32>;
-
-    let mut next_state: i32; 
-    let mut next_distance: i32;
-    let mut city: i32;
-    let mut previous_city: i32;
     let mut can_visit_first_city: bool;
-    let mut is_city_visited: bool;
-    let mut is_first_city: bool;
-
-    for i in 1..n {
-        let state = 1  << i;
-
-        shortest_paths[state][i] = city_graph[first_city][i];
-        previous_cities[state][i] = first_city as i32;
-        is_state_used[state] = true;
-
-        states.push(state as i32);
-    }
+    let mut next_states_mutex: Arc<Mutex<Vec<i32>>>;
 
     for iteration in 1..n {
-        next_states = vec![];
         can_visit_first_city = iteration == n - 1;
+        next_states_mutex = Arc::new(Mutex::new(Vec::new()));
 
-        for &state in &states {
+        states.par_iter().for_each(|&state| {
+            let mut next_states = Vec::new();
+
             for city_index in 0..n {
-                city = 1 << city_index;
-
-                is_city_visited = city & state != 0;
-                is_first_city = city_index == first_city;
-                if is_city_visited || (is_first_city && !can_visit_first_city) { continue; }
-
-                next_state = state | city;
-
-                if !is_state_used[next_state as usize] {
-                    next_states.push(next_state);
-                    is_state_used[next_state as usize] = true;
+                let city_bit = 1 << city_index;
+                if (city_bit & state != 0) || (city_index == first_city && !can_visit_first_city) {
+                    continue;
                 }
 
-                for previous_city_index in 0..n {
-                    previous_city = 1 << previous_city_index;
+                let next_state = state | city_bit;
 
-                    is_city_visited = previous_city & state != 0;
-                    if !is_city_visited { continue; }
+                {
+                    let mut used = is_state_used.lock().unwrap();
+                    if !used[next_state as usize] {
+                        next_states.push(next_state);
+                        used[next_state as usize] = true;
+                    }
+                }
 
-                    next_distance = shortest_paths[state as usize][previous_city_index] + city_graph[previous_city_index][city_index];
+                for prev_index in 0..n {
+                    let prev_bit = 1 << prev_index;
+                    if prev_bit & state == 0 { continue; }
 
-                    if next_distance < shortest_paths[next_state as usize][city_index] {
-                        shortest_paths[next_state as usize][city_index] = next_distance;
-                        previous_cities[next_state as usize][city_index] = previous_city_index as i32;
+                    let mut sp_cell = shortest_paths[next_state as usize][city_index].lock().unwrap();
+                    let sp_prev = shortest_paths[state as usize][prev_index].lock().unwrap();
+                    let new_distance = *sp_prev + city_graph[prev_index][city_index];
+
+                    if new_distance < *sp_cell {
+                        *sp_cell = new_distance;
+                        *previous_cities[next_state as usize][city_index].lock().unwrap() = prev_index as i32;
                     }
                 }
             }
-        }
 
-        states = next_states;
+            let mut next_states_lock = next_states_mutex.lock().unwrap();
+            next_states_lock.extend(next_states);
+        });
+
+        states = next_states_mutex.lock().unwrap().to_vec();
     }
 
-    let shortest_distance = shortest_paths[possible_states - 1][0];
+    let shortest_distance = *shortest_paths[possible_states - 1][0].lock().unwrap();
 
     let mut path = Vec::new();
     let mut state = possible_states - 1;
     let mut city = first_city;
 
-    while previous_cities[state][city] > -1 {
+    while *previous_cities[state][city].lock().unwrap() > -1 {
         path.push(city);
-        let prev_city = previous_cities[state][city] as usize;
+        let prev_city = *previous_cities[state][city].lock().unwrap() as usize;
         state ^= 1 << city;
         city = prev_city;
     }
-    
+
     path.push(first_city);
     path.reverse();
 
