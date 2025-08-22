@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Instant, Duration};
 
 fn enumerate_cities(file_path: &str, cities: Vec<String>) -> io::Result<(HashMap<String, usize>, Vec<String>)> {
     let file: File = File::open(file_path)?;
@@ -62,9 +62,10 @@ fn build_city_adjacency_list(file_path: &str, city_to_id: &HashMap<String, usize
     Ok(city_graph)
 }
 
-fn save_solution( shortest_distance: i32, path: &Vec<usize>, city_graph: &Vec<Vec<i32>>, id_to_city: &Vec<String>, output_file: &str) -> io::Result<()> {
+fn save_solution(duration: Duration, shortest_distance: i32, path: &Vec<usize>, city_graph: &Vec<Vec<i32>>, id_to_city: &Vec<String>, output_file: &str) -> io::Result<()> {
     let mut file = File::create(output_file)?;
 
+    writeln!(file, "{:.6}", duration.as_secs_f64())?;
     writeln!(file, "{}", shortest_distance)?;
 
     for i in 0..path.len() - 1 {
@@ -178,19 +179,16 @@ fn main() {
         return;
     }
 
-    let csv_file: &'static str = "../input.txt";
+    let csv_file: &'static str = "../results/input/input.txt";
     let (city_to_id, id_to_city) = enumerate_cities(&csv_file, cities).unwrap();
     let city_graph: Vec<Vec<i32>> = build_city_adjacency_list(&csv_file, &city_to_id).unwrap();
 
-    let first_city = 0;
+    let first_city: usize = 0;
 
-    let start = Instant::now();
+    let start: Instant = Instant::now();
     let (shortest_distance, path) = find_shortest_path(&city_graph, first_city);
-    let duration = start.elapsed();
-    
-    println!("Shortest distance: {}", shortest_distance);
-    println!("Time elapsed: {:.6} seconds", duration.as_secs_f64());
+    let duration: Duration = start.elapsed();
 
-    let output_file = "../output.txt";
-    save_solution(shortest_distance, &path, &city_graph, &id_to_city, output_file).unwrap();
+    let output_file = format!("../results/output/output_parallel_{}.txt", n);
+    save_solution(duration, shortest_distance, &path, &city_graph, &id_to_city, &output_file).unwrap();
 }
