@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+
+  travelling-salesman-problem:
+    build: ../travelling_salesman_problem
+    container_name: travelling-salesman-problem
+    volumes:
+      - ../results:/app/results
