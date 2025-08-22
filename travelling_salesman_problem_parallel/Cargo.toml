@@ -1,5 +1,5 @@
 [package]
-name = "travelling_salesman_problem_sequential"
+name = "travelling_salesman_problem_parallel"
 version = "0.1.0"
 edition = "2024"
 
