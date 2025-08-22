@@ -173,7 +173,7 @@ fn main() {
         return;
     }
 
-    let csv_file: &'static str = "../resources/input/input.txt";
+    let csv_file: &'static str = "resources/input/input.txt";
     let (city_to_id, id_to_city) = enumerate_cities(&csv_file, cities).unwrap();
     let city_graph: Vec<Vec<i32>> = build_city_adjacency_list(&csv_file, &city_to_id).unwrap();
 
@@ -183,6 +183,6 @@ fn main() {
     let (shortest_distance, path) = find_shortest_path(&city_graph, first_city);
     let duration: Duration = start.elapsed();
 
-    let output_file = format!("../resources/output/output_sequential_{}.txt", n);
+    let output_file = format!("resources/output/output_sequential_{}.txt", n);
     save_solution(duration, shortest_distance, &path, &city_graph, &id_to_city, &output_file).unwrap();
 }
