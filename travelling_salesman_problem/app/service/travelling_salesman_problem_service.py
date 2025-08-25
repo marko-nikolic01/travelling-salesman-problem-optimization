@@ -18,13 +18,15 @@ class TravellingSalesmanProblemService:
             binary = self.sequential_bin
             cmd = [binary]
             output_template = self.sequential_output_template
+            separator = "\t"
         elif mode == "parallel":
             binary = self.parallel_bin
             cmd = [binary]
             output_template = self.parallel_output_template
+            separator = "\t\t"
 
         for n in range(2, len(cities_only) + 1):
-            print(f"\nExecuting test case\tMODE: {mode.upper()}\tCITIES:{n}...", flush=True)
+            print(f"\nExecuting test case\tMODE: {mode.upper()}{separator}CITIES:{n}...", flush=True)
 
             cities_subset = cities_only[:n]
 
