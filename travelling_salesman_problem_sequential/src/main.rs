@@ -61,15 +61,15 @@ fn build_city_adjacency_list(file_path: &str, city_to_id: &HashMap<String, usize
 }
 
 fn save_solution(duration: Duration, shortest_distance: i32, path: &Vec<usize>, city_graph: &Vec<Vec<i32>>, id_to_city: &Vec<String>, output_file: &str) -> io::Result<()> {
-    let mut file = File::create(output_file)?;
+    let mut file: File = File::create(output_file)?;
 
     writeln!(file, "{:.6}", duration.as_secs_f64())?;
     writeln!(file, "{}", shortest_distance)?;
 
     for i in 0..path.len() - 1 {
-        let from = path[i];
-        let to = path[i + 1];
-        let dist = city_graph[from][to];
+        let from: usize = path[i];
+        let to: usize = path[i + 1];
+        let dist: i32 = city_graph[from][to];
         let parts_from: Vec<&str> = id_to_city[from].split(',').map(|s| s.trim()).collect();
         let parts_to: Vec<&str> = id_to_city[to].split(',').map(|s| s.trim()).collect();
         writeln!(file, "{},{},{},{},{}", parts_from[0], parts_from[1], parts_to[0], parts_to[1], dist)?;
@@ -79,15 +79,15 @@ fn save_solution(duration: Duration, shortest_distance: i32, path: &Vec<usize>, 
 }
 
 fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Vec<usize>) {
-    let n = city_graph.len();
-    let possible_states = 1 << n;
+    let n: usize = city_graph.len();
+    let possible_states: usize = 1 << n;
 
     let mut shortest_paths: Vec<Vec<i32>> = vec![vec![i32::MAX; n]; possible_states];
-    let mut previous_cities: Vec<Vec<i32>> = vec![vec![-1; n]; possible_states];
-    let mut is_state_used = vec![false; possible_states];
+    let mut previous_cities: Vec<Vec<i16>> = vec![vec![-1; n]; possible_states];
+    let mut is_state_used: Vec<bool> = vec![false; possible_states];
 
 
-    let mut states = vec![];
+    let mut states: Vec<i32> = vec![];
     let mut next_states: Vec<i32>;
 
     let mut next_state: i32; 
@@ -99,10 +99,10 @@ fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Ve
     let mut is_first_city: bool;
 
     for i in 1..n {
-        let state = 1  << i;
+        let state: usize = 1  << i;
 
         shortest_paths[state][i] = city_graph[first_city][i];
-        previous_cities[state][i] = first_city as i32;
+        previous_cities[state][i] = first_city as i16;
         is_state_used[state] = true;
 
         states.push(state as i32);
@@ -137,7 +137,7 @@ fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Ve
 
                     if next_distance < shortest_paths[next_state as usize][city_index] {
                         shortest_paths[next_state as usize][city_index] = next_distance;
-                        previous_cities[next_state as usize][city_index] = previous_city_index as i32;
+                        previous_cities[next_state as usize][city_index] = previous_city_index as i16;
                     }
                 }
             }
@@ -146,15 +146,15 @@ fn find_shortest_path(city_graph: &Vec<Vec<i32>>, first_city: usize) -> (i32, Ve
         states = next_states;
     }
 
-    let shortest_distance = shortest_paths[possible_states - 1][0];
+    let shortest_distance: i32 = shortest_paths[possible_states - 1][0];
 
-    let mut path = Vec::new();
-    let mut state = possible_states - 1;
-    let mut city = first_city;
+    let mut path: Vec<usize> = Vec::new();
+    let mut state: usize = possible_states - 1;
+    let mut city: usize = first_city;
 
     while previous_cities[state][city] > -1 {
         path.push(city);
-        let prev_city = previous_cities[state][city] as usize;
+        let prev_city: usize = previous_cities[state][city] as usize;
         state ^= 1 << city;
         city = prev_city;
     }
@@ -183,6 +183,6 @@ fn main() {
     let (shortest_distance, path) = find_shortest_path(&city_graph, first_city);
     let duration: Duration = start.elapsed();
 
-    let output_file = format!("../results/output/output_sequential_{}.txt", n);
+    let output_file: String = format!("../results/output/output_sequential_{}.txt", n);
     save_solution(duration, shortest_distance, &path, &city_graph, &id_to_city, &output_file).unwrap();
 }
