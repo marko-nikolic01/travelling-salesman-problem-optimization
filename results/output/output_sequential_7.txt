@@ -1,0 +1,9 @@
+0.000133
+5520
+Berlin,Germany,Frankfurt,Germany,550
+Frankfurt,Germany,Amsterdam,Netherlands,450
+Amsterdam,Netherlands,Brussels,Belgium,170
+Brussels,Belgium,Barcelona,Spain,1300
+Barcelona,Spain,Florence,Italy,1200
+Florence,Italy,Budapest,Hungary,1200
+Budapest,Hungary,Berlin,Germany,650

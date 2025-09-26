@@ -1,0 +1,18 @@
+0.302344
+7480
+Paris,France,Madrid,Spain,1050
+Madrid,Spain,Barcelona,Spain,620
+Barcelona,Spain,Lyon,France,660
+Lyon,France,Geneva,Switzerland,140
+Geneva,Switzerland,Milan,Italy,300
+Milan,Italy,Florence,Italy,300
+Florence,Italy,Rome,Italy,280
+Rome,Italy,Munich,Germany,900
+Munich,Germany,Budapest,Hungary,550
+Budapest,Hungary,Prague,Czech Republic,530
+Prague,Czech Republic,Berlin,Germany,350
+Berlin,Germany,Frankfurt,Germany,550
+Frankfurt,Germany,Brussels,Belgium,380
+Brussels,Belgium,Amsterdam,Netherlands,170
+Amsterdam,Netherlands,London,United Kingdom,360
+London,United Kingdom,Paris,France,340

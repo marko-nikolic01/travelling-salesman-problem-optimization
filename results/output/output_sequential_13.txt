@@ -1,0 +1,15 @@
+0.028723
+6780
+Berlin,Germany,Frankfurt,Germany,550
+Frankfurt,Germany,Brussels,Belgium,380
+Brussels,Belgium,Amsterdam,Netherlands,170
+Amsterdam,Netherlands,London,United Kingdom,360
+London,United Kingdom,Madrid,Spain,1400
+Madrid,Spain,Barcelona,Spain,620
+Barcelona,Spain,Lyon,France,660
+Lyon,France,Geneva,Switzerland,140
+Geneva,Switzerland,Milan,Italy,300
+Milan,Italy,Florence,Italy,300
+Florence,Italy,Munich,Germany,700
+Munich,Germany,Budapest,Hungary,550
+Budapest,Hungary,Berlin,Germany,650
