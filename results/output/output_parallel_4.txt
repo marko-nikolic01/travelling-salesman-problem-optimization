@@ -1,0 +1,6 @@
+0.000878
+3720
+Berlin,Germany,Barcelona,Spain,1600
+Barcelona,Spain,Brussels,Belgium,1300
+Brussels,Belgium,Amsterdam,Netherlands,170
+Amsterdam,Netherlands,Berlin,Germany,650

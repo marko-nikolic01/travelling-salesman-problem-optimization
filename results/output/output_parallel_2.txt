@@ -1,0 +1,4 @@
+0.000806
+2800
+Amsterdam,Netherlands,Barcelona,Spain,1400
+Barcelona,Spain,Amsterdam,Netherlands,1400

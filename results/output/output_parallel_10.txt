@@ -1,0 +1,12 @@
+0.002261
+6060
+Berlin,Germany,Amsterdam,Netherlands,650
+Amsterdam,Netherlands,London,United Kingdom,360
+London,United Kingdom,Brussels,Belgium,320
+Brussels,Belgium,Frankfurt,Germany,380
+Frankfurt,Germany,Geneva,Switzerland,500
+Geneva,Switzerland,Lyon,France,140
+Lyon,France,Barcelona,Spain,660
+Barcelona,Spain,Florence,Italy,1200
+Florence,Italy,Budapest,Hungary,1200
+Budapest,Hungary,Berlin,Germany,650
