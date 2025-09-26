@@ -1,7 +1,0 @@
-0.000041
-4370
-Berlin,Germany,Amsterdam,Netherlands,650
-Amsterdam,Netherlands,Brussels,Belgium,170
-Brussels,Belgium,Barcelona,Spain,1300
-Barcelona,Spain,Budapest,Hungary,1600
-Budapest,Hungary,Berlin,Germany,650

@@ -1,4 +1,0 @@
-0.001249
-2800
-Amsterdam,Netherlands,Barcelona,Spain,1400
-Barcelona,Spain,Amsterdam,Netherlands,1400

@@ -1,5 +1,0 @@
-0.000011
-3650
-Berlin,Germany,Barcelona,Spain,1600
-Barcelona,Spain,Amsterdam,Netherlands,1400
-Amsterdam,Netherlands,Berlin,Germany,650
